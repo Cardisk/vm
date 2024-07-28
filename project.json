@@ -1,0 +1,17 @@
+{
+  "langrev": "1",
+  "warnings": [ "all" ],
+  "dependency-search-paths": [ "lib" ],
+  "dependencies": [ ],
+  "authors": [ "Matteo Cardinaletti" ],
+  "version": "0.1.0",
+  "sources": [ "src/**" ],
+  "output": "build",
+  "targets": {
+    "vm": {
+      "type": "executable"
+    }
+  },
+  "cpu": "generic",
+  "opt": "O0"
+}
