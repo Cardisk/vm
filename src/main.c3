@@ -1,41 +1,37 @@
 module vm;
 
 import std::io;
-
-const int BUF_LEN = 100;
+import std::core::mem;
 
 fn void main(String[] args) {
-    File! f = io::file::open(args[1], "r");
+    String path = "README.md";
+    File! f = file::open(path, "r");
     if (catch err = f) {
-        io::printfn("fatal: Failed to open %s: %s.", args[1], err);
+        io::printf("FATAL: Failed to open '%s': %s", path, err);
         return;
     }
 
-    // TODO: maybe is better to handle the possible error here
+    // TODO: maybe handle possible errors with file.close()?
     defer (void) f.close();
-
-    usz! len = f.seek(0, END);
+    
+    usz! len = file::get_size(path);
     if (catch err = len) {
-        io::printfn("fatal: Failed to seek %s: %s.", args[1], err);
+        io::printf("FATAL: Unable to get size of '%s': %s", path, err);
         return;
     }
 
-    if (len > BUF_LEN) {
-        io::printfn("fatal: length of %s is greater than BUF_LEN(%d).", args[1], BUF_LEN);
+    char[]! buffer = mem::new_array(char, len);
+    if (catch err = buffer) {
+        io::printf("FATAL: Unable to allocate %d bytes: %s", len, err);
         return;
     }
 
-    char[BUF_LEN] buf;
-    usz! read = f.read(&buf);
+    usz! read = f.read(buffer);
     if (catch err = read) {
-        io::printfn("fatal: Failed to read %s: %s.", args[1], err);
+        io::printf("FATAL: Failed to read content of '%s': %s", path, err);
         return;
     }
 
-    if (read < len) {
-        io::printfn("fatal: read only %d chars from %s instead of %d.", read, args[1], len);
-        return;
-    }
-
-    io::printn(buf);
+    io::printf("Read %d bytes\n", read);
+    io::printn(buffer);
 }
