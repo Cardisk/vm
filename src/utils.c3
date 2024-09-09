@@ -1,9 +1,10 @@
 module utils;
 
+import std::thread;
 import std::io::file;
 
-fn String! read_file(String path) {
-    File! f = file::open(path, "r");
+fn String! read_file(String path, String mode = "r") {
+    File! f = file::open(path, mode);
     if (catch err = f) return err?;
 
     // TODO: maybe handle possible errors with file.close()?
@@ -20,3 +21,8 @@ fn String! read_file(String path) {
 
     return (String) buffer;
 }
+
+fn void crash(String msg, int code = 1) {
+    io::eprintn(msg);
+    thread::exit(code);
+} 
