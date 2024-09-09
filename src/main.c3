@@ -22,5 +22,4 @@ fn void main(String[] args) {
 
     eat_magic(&txt);
     io::printn("SUCCESS!");
-    io::printn(txt[0]);
 }
