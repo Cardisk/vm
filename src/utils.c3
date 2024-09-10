@@ -23,6 +23,11 @@ fn String! read_file(String path, String mode = "r") {
 }
 
 fn void crash(String msg, int code = 1) {
-    io::eprintn(msg);
+    io::eprintfn("FATAL: %s", msg);
     thread::exit(code);
 } 
+
+fn void todo(String msg) {
+    io::eprintfn("TODO: %s", msg);
+    thread::exit(1);
+}
