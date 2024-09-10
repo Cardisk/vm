@@ -2,6 +2,7 @@ module vm;
 
 import utils;
 import std::io;
+import std::core::string;
 
 // 4b OPCODE - 4b MODE (Mem, Reg, Imm)
 enum Code : uint {
@@ -38,37 +39,76 @@ enum Reg : uint {
     R12,        // General purpose
 }
 
-// Instruction pointer
-usz ip = 0;
+struct Vm {
+    // Instruction pointer
+    usz ip;
+    // Base stack pointer
+    usz bp;
+    // Stack pointer
+    usz sp;
+
+    // 16KB
+    ulong[1024 * 2] stack;
+    // Dynamic buffer
+    char *heap;
+}
 
 fn void eat_magic(String *data) {
-    if ((*data).len < 2) utils::crash("Missing magic code: Too few bytes.");  
+    if ((*data).len < 2) utils::crash("Magic code: Too few bytes provided.");  
 
     if (!(*data).starts_with("vm")) {
-        utils::crash("Missing magic code: Invalid magic code.");
+        utils::crash("Magic code: Invalid combination provided.");
     }
 
     (*data) = (*data).trim("vm");
 }
 
 fn void main(String[] args) {
+    Vm vm;
+
     String! txt = utils::read_file("resources/bytecode");
     if (catch err = txt) {
         io::printf("Unable to read the file: %s", err);
         return;
     }
 
+    txt = txt.trim();
+
     eat_magic(&txt);
+    
+    while (vm.ip < txt.len) {
+        int opcode = txt[vm.ip] >> 0x04;
+        int mode   = txt[vm.ip] |  0x0F;
 
-    while (ip < txt.len) {
-        int opcode = txt[ip] >> 0x04;
-        int mode = txt[ip] | 0x0F;
-
-        switch (opcode) {
+        switch ((Code) opcode) {
+            case Code.MOV:
+                utils::todo("MOV");
+            case Code.CMP:
+                utils::todo("CMP");
+            case Code.JMP:
+                utils::todo("JMP");
+            case Code.ADD:
+                utils::todo("ADD");
+            case Code.SUB:
+                utils::todo("SUB");
+            case Code.MUL:
+                utils::todo("MUL");
+            case Code.DIV:
+                utils::todo("DIV");
+            case Code.PUSH:
+                utils::todo("PUSH");
+            case Code.POP:
+                utils::todo("POP");
+            case Code.LOAD:
+                utils::todo("LOAD");
+            case Code.STORE:
+                utils::todo("STORE");
             default:
-                utils::todo("Dispatching instructions.");
+                utils::crash(string::new_format("Unknown opcode: %d", opcode));
         }
 
-        ip++;
+        vm.ip++;
     }
+
+    io::printn("EXECUTION COMPLETED.");
 }
