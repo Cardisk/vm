@@ -22,8 +22,9 @@ fn String! read_file(String path, String mode = "r") {
     return (String) buffer;
 }
 
-fn void crash(String msg, int code = 1) {
-    io::eprintfn("FATAL: %s", msg);
+fn void crash(String msg, String note = "", int code = 1) {
+    io::eprintfn("[ FATAL ]: %s", msg);
+    if (note.len > 0) io::eprintfn("[ NOTE  ]: %s", note); 
     thread::exit(code);
 } 
 
