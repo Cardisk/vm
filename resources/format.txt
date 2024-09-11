@@ -1,0 +1,24 @@
+Bytecode format:
+
+[2B magic code (vm)]
+[4B data pool size ]
+[?B data pool      ]
+[?B code pool      ]
+
+--------------------
+
+Instruction format:
+
+[1B opcode         ]
+[1B mode           ]
+[?B operand[s]     ]
+
+--------------------
+
+Machine:
+
+- stack (fixed size)
+- heap  (dyn buffer)
+- data  (fixed size)
+- bytecode
+- registers

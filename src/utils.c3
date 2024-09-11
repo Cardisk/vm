@@ -7,7 +7,7 @@ fn String! read_file(String path, String mode = "r") {
     File! f = file::open(path, mode);
     if (catch err = f) return err?;
 
-    // TODO: maybe handle possible errors with file.close()?
+    // ISSUE(#1): maybe handle possible errors with file.close()?
     defer (void) f.close();
     
     usz! len = file::get_size(path);
