@@ -1,7 +1,7 @@
 Bytecode format:
 
 [2B magic code (vm)]
-[4B data pool size ]
+[8B data pool size ]
 [?B data pool      ]
 [?B code pool      ]
 
