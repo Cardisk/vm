@@ -27,17 +27,17 @@ struct Vm {
     String code;
 }
 
-fn void Vm.eat_magic(&self) @private {
-    if (self.bytecode.len < 2) {
+fn void eat_magic(Vm *vm) @private {
+    if (vm.bytecode.len < 2) {
         utils::crash("Magic code: Too few bytes provided.",
                      string::new_format("Expected %d, got %d.", 
-                                        MAGIC.len, self.bytecode.len));
+                                        MAGIC.len, vm.bytecode.len));
     }
 
-    if (!self.bytecode.starts_with("vm")) {
+    if (!vm.bytecode.starts_with("vm")) {
         utils::crash("Magic code: Invalid combination provided.",
                      string::new_format("Expected '%s', got '%s'.", 
-                                        MAGIC, self.bytecode[:2]));
+                                        MAGIC, vm.bytecode[:2]));
     }
 }
 
@@ -53,7 +53,7 @@ fn Vm init(String data) {
     // a malformed instruction.
     vm.bytecode = txt!!.trim();
 
-    vm.eat_magic();
+    eat_magic(&vm);
     if (vm.bytecode.len < 8) {
         utils::crash("Data pool: Too few bytes provided.",
                      string::new_format("Expected 8, got %d.", 
