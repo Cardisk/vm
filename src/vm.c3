@@ -48,7 +48,7 @@ fn Vm init(String data) {
     }
 
     Vm vm;
-    // TODO: maybe trimming the bytecode is not a good idea
+    // ISSUE(#3): maybe trimming the bytecode is not a good idea
     // a better way could be crashing when encountering 
     // a malformed instruction.
     vm.bytecode = txt!!.trim();
@@ -60,10 +60,12 @@ fn Vm init(String data) {
                                         vm.bytecode.len - MAGIC.len));
     }
 
-    ulong data_size = vm.bytecode[0];
+    ulong data_size;
+    for (int i = MAGIC.len; i < MAGIC.len + ulong.sizeof; i++) {
+        data_size |= (ulong) (vm.bytecode[i] << 8 * i);
+    }
 
-    // ISSUE(#2): need to initialize the slices correctly here
-    vm.data = vm.bytecode[:data_size];
+    vm.data = vm.bytecode[MAGIC.len : data_size];
     vm.code = vm.bytecode[(MAGIC.len + vm.data.len)..];
 
     return vm;
