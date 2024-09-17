@@ -14,6 +14,20 @@ struct Vm {
     // Stack pointer
     usz sp;
 
+    // General purpose
+    usz r1;
+    usz r2;
+    usz r3;
+    usz r4;
+    usz r5;
+    usz r6;
+    usz r7;
+    usz r8;
+    usz r9;
+    usz r10;
+    usz r11;
+    usz r12;
+
     // 32KB
     char[1024 * 32] stack;
     // heap is forwarded to the vm one,
