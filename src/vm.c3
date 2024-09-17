@@ -62,10 +62,7 @@ fn Vm init(String data) {
     }
 
     Vm vm;
-    // ISSUE(#3): maybe trimming the bytecode is not a good idea
-    // a better way could be crashing when encountering 
-    // a malformed instruction.
-    vm.bytecode = txt!!.trim();
+    vm.bytecode = txt!!;
 
     eat_magic(&vm);
     if (vm.bytecode.len < 8) {
