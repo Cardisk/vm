@@ -29,6 +29,10 @@ fn void crash(String msg, String note = "", int code = 1) {
 } 
 
 fn void todo(String msg) {
-    io::eprintfn("TODO: %s", msg);
+    io::eprintfn("[ TODO  ]: %s", msg);
     thread::exit(1);
+}
+
+fn void log(String msg) {
+    io::printfn("[ LOG   ]: %s", msg);
 }

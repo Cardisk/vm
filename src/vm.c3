@@ -61,12 +61,18 @@ fn Vm init(String data) {
     }
 
     ulong data_size;
+    int j = 0;
     for (int i = MAGIC.len; i < MAGIC.len + ulong.sizeof; i++) {
-        data_size |= (ulong) (vm.bytecode[i] << 8 * i);
+        data_size |= ((ulong)(vm.bytecode[i])) << (8 * j++);
     }
 
-    vm.data = vm.bytecode[MAGIC.len : data_size];
-    vm.code = vm.bytecode[(MAGIC.len + vm.data.len)..];
+
+    vm.data = vm.bytecode[(MAGIC.len + ulong.sizeof) : data_size];
+    vm.code = vm.bytecode[((MAGIC.len + ulong.sizeof) + data_size)..];
+
+    utils::log(string::new_format("Bytecode  size: %d", vm.bytecode.len));
+    utils::log(string::new_format("Data pool size: %d", vm.data.len));
+    utils::log(string::new_format("Code pool size: %d", vm.code.len));
 
     return vm;
 }
