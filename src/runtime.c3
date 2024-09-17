@@ -4,11 +4,13 @@ import vm;
 import utils;
 import std::io;
 import std::core::string;
+import libc;
 
 // 8b OPCODE - 4b UNUSED - 3b MODE (Mem, Reg, Imm)
 enum Code : uint {
     INVALID,
-    MOV,
+    EXIT,
+    // MOV,
     // CMP,
     // JMP,
     // ADD,
@@ -73,14 +75,13 @@ fn Mode decode_mode(char byte) {
     return Mode.INVALID;
 }
 
-fn void mov(Vm *vm) {
-    assert(vm.ip < vm.code.len, 
-           "Instruction decoding: Missing instruction mode.");
+fn void exit(Vm *vm) {
+    if (vm.ip >= vm.code.len) {
+        utils::crash("Exit instruction: Missing exit code.");
+    }
 
-    Mode mode = decode_mode(vm.code[vm.ip]);
-    vm.ip++;
-
-    utils::todo("mov not fully implemented.");
+    int code = (int) vm.code[vm.ip];
+    libc::exit(code);
 }
 
 fn void exec(Vm *vm) {
@@ -89,8 +90,8 @@ fn void exec(Vm *vm) {
         vm.ip++;
 
         switch ((Code) opcode) {
-            case Code.MOV:
-                mov(vm);
+            case Code.EXIT:
+                exit(vm);
             default:
                 utils::crash(string::new_format("Unknown opcode: %s", (Code) opcode));
         }

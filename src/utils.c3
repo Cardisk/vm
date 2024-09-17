@@ -1,6 +1,6 @@
 module utils;
 
-import std::thread;
+import libc;
 import std::io::file;
 
 fn String! read_file(String path, String mode = "r") {
@@ -25,12 +25,12 @@ fn String! read_file(String path, String mode = "r") {
 fn void crash(String msg, String note = "", int code = 1) {
     io::eprintfn("[ FATAL ]: %s", msg);
     if (note.len > 0) io::eprintfn("[ NOTE  ]: %s", note); 
-    thread::exit(code);
+    libc::exit(code);
 } 
 
 fn void todo(String msg) {
     io::eprintfn("[ TODO  ]: %s", msg);
-    thread::exit(1);
+    libc::exit(1);
 }
 
 fn void log(String msg) {
