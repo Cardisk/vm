@@ -22,17 +22,30 @@ fn String! read_file(String path, String mode = "r") {
     return (String) buffer;
 }
 
+fn usz occurrences(String haystack, String needle) {
+    String tmp = haystack;
+    usz occ = 0;
+    while (true) {
+        usz! index = tmp.index_of(needle);
+        if (catch index) break;
+        occ++;
+        tmp = tmp[(index + needle.len)..];
+    }
+
+    return occ;
+}
+
 fn void crash(String msg, String note = "", int code = 1) {
     io::eprintfn("[ FATAL ]: %s", msg);
     if (note.len > 0) io::eprintfn("[ NOTE  ]: %s", note); 
     libc::exit(code);
 } 
 
-fn void todo(String msg) {
-    io::eprintfn("[ TODO  ]: %s", msg);
+fn void todo(String fmt, args...) {
+    io::eprintfn("[ TODO  ]: %s", string::new_format(fmt, args));
     libc::exit(1);
 }
 
-fn void log(String msg) {
-    io::printfn("[ LOG   ]: %s", msg);
+fn void log(String fmt, args...) {
+    io::printfn("[ LOG   ]: %s", string::new_format(fmt, args));
 }

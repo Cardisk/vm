@@ -10,6 +10,7 @@ import libc;
 enum Code : uint {
     INVALID,
     EXIT,
+    PRINT,
     // MOV,
     // CMP,
     // JMP,
@@ -84,6 +85,17 @@ fn void exit(Vm *vm) {
     libc::exit(code);
 }
 
+fn void print(Vm *vm) {
+    if (vm.ip >= vm.code.len) {
+        utils::crash("Print instruction: Missing data pool index.");
+    }
+
+    ulong index = vm::read_long(vm);
+    ulong size  = vm::read_long(vm);
+
+    io::print(vm.data[index : size]);
+}
+
 fn void exec(Vm *vm) {
     while (vm.ip < vm.code.len) {
         int opcode = vm.code[vm.ip];
@@ -92,6 +104,8 @@ fn void exec(Vm *vm) {
         switch ((Code) opcode) {
             case Code.EXIT:
                 exit(vm);
+            case Code.PRINT:
+                print(vm);
             default:
                 utils::crash(string::new_format("Unknown opcode: %s", (Code) opcode));
         }

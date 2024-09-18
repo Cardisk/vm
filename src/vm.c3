@@ -87,3 +87,14 @@ fn Vm init(String data) {
 
     return vm;
 }
+
+fn ulong read_long(Vm *vm) {
+    ulong value;
+    int j = 0;
+    
+    for (; vm.ip < vm.ip + ulong.sizeof; vm.ip++) {
+        value |= ((ulong)(vm.code[vm.ip])) << (8 * j++);
+    }
+
+    return value;
+}
