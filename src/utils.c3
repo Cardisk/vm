@@ -41,11 +41,11 @@ fn void crash(String msg, String note = "", int code = 1) {
     libc::exit(code);
 } 
 
-fn void todo(String fmt, args...) {
-    io::eprintfn("[ TODO  ]: %s", string::new_format(fmt, args));
+fn void todo(String msg) {
+    io::eprintfn("[ TODO  ]: %s", msg);
     libc::exit(1);
 }
 
-fn void log(String fmt, args...) {
-    io::printfn("[ LOG   ]: %s", string::new_format(fmt, args));
+fn void log(String msg) {
+    io::printfn("[ LOG   ]: %s", msg);
 }
