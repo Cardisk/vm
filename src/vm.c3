@@ -89,12 +89,15 @@ fn Vm init(String data) {
 }
 
 fn ulong read_long(Vm *vm) {
-    ulong value;
+    ulong value = 0;
     int j = 0;
     
-    for (; vm.ip < vm.ip + ulong.sizeof; vm.ip++) {
-        value |= ((ulong)(vm.code[vm.ip])) << (8 * j++);
+    usz i = vm.ip;
+    while (i < vm.ip + ulong.sizeof) {
+        value |= ((ulong)(vm.code[i])) << (8 * j++);
+        i++;
     }
+    vm.ip = i;
 
     return value;
 }
