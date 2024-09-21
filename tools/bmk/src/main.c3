@@ -1,6 +1,7 @@
 module bmk;
 
 import std::io;
+import std::io::file;
 import std::core::mem;
 import std::core::string;
 
@@ -25,9 +26,10 @@ fn void! Buffer.init(&buf, usz capacity = 10) {
 }
 
 fn void Buffer.write(&buf, char c) {
-    if (buf.len >= buf.capacity) {
+    if (buf.len >= buf.capacity - 1) {
         buf.capacity *= 2;
         char *ptr = (char *) mem::realloc(buf.data, buf.capacity);
+        buf.data = ptr[: buf.capacity];
     }
 
     buf.data[buf.len++] = c;
@@ -143,8 +145,18 @@ fn void append_int(Buffer *buf) {
     }
 }
 
-fn void main()
-{
+fn void main(String[] args) {
+    if (args.len < 2) {
+        io::eprintfn("[ %sUSAGE%s ]: bmk <output>", RED, RESET);
+        return;
+    }
+
+    File! out = file::open(args[1], "wb");
+    if (catch e = out) {
+        fatal(e);
+        return;
+    }
+
     Buffer buf;
     if (catch e = buf.init()) {
         fatal(e);
@@ -181,12 +193,14 @@ fn void main()
     io::printn("Buffer:");
     io::printfn("> len: %d", buf.len);
     io::printfn("> capacity: %d", buf.capacity);
-    io::printn("> data:");
+    io::printn();
+    io::printfn("Writing to '%s'...", args[1]);
 
-    io::print(GREEN);
-    foreach(c : buf.data) {
-        io::printf("%c", c);
+    if (catch e = out.write(buf.data)) {
+        fatal(e);
+        return;
     }
-    io::printn(RESET);
+
+    io::printn("Done.");
     io::printn("----------");
 }
