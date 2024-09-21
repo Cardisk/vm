@@ -11,6 +11,7 @@ enum Code : uint {
     INVALID,
     EXIT,
     PRINT,
+    VARDECL,
     // MOV,
     // CMP,
     // JMP,
@@ -24,26 +25,77 @@ enum Code : uint {
     // STORE,
 }
 
-// 0x01 <1B code>
+// <opcode> <1B code>
 fn void exit(Vm *vm) {
     if (vm.ip >= vm.code.len) {
         utils::crash("Exit instruction: Missing exit code.");
     }
 
+    // libc::exit accepts an integer
     int code = (int) vm.code[vm.ip];
     libc::exit(code);
 }
 
-// 0x02 <8B index> <8B size>
+// <opcode> <8B index> <8B size>
 fn void print(Vm *vm) {
-    if (vm.ip >= vm.code.len) {
-        utils::crash("Print instruction: Missing data pool index.");
+    ulong! index = vm::read_long(vm);
+    if (catch index) {
+        utils::crash("Print instruction: Missing/uncomplete data pool index.");
+        return;
     }
 
-    ulong index = vm::read_long(vm);
-    ulong size  = vm::read_long(vm);
+    ulong! size = vm::read_long(vm);
+    if (catch size) {
+        utils::crash("Print instruction: Missing/uncomplete string size.");
+        return;
+    }
 
     io::print(vm.data[index : size]);
+}
+
+// <opcode> <8B index> <8B size> <1B type> <?B operand>
+fn void vardecl(Vm *vm) {
+    ulong! name_index = vm::read_long(vm);
+    if (catch name_index) {
+        utils::crash("Var declaration: Missing/uncomplete var name index.");
+        return;
+    }
+
+    ulong! name_size = vm::read_long(vm);
+    if (catch name_size) {
+        utils::crash("Var declaration: Missing/uncomplete var name size.");
+        return;
+    }
+
+    String var_name = vm.data[name_index : name_size];
+    
+    if (vm.ip >= vm.code.len) {
+        utils::crash("Var declaration: Missing type info.");
+        return;
+    }
+
+    // only 1B needed
+    char type = vm.code[vm.ip++];
+    switch (type) {
+        // integer
+        case 0x0:
+            int! value = vm::read_int(vm);
+            if (catch value) {
+                utils::crash("Var declaration: Missing/uncomplete var value");
+                return;
+            }
+
+            ulong stack_index = vm.sp;
+            for (int i = 0; i < int.sizeof; i++) {
+                vm.stack[vm.sp++] = (char)(value >> 8 * i);
+            }
+
+            vm::Var v = {stack_index, int.sizeof};
+            vm.vars.set(var_name, v);
+        default:
+            utils::crash("Var declaration: Unknown type provided.");
+            break;
+    }
 }
 
 fn void exec(Vm *vm) {
@@ -56,6 +108,8 @@ fn void exec(Vm *vm) {
                 exit(vm);
             case Code.PRINT:
                 print(vm);
+            case Code.VARDECL:
+                vardecl(vm);
             default:
                 utils::crash(string::new_format("Unknown opcode: %s", (Code) opcode));
         }

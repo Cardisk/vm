@@ -19,6 +19,6 @@ fn void main(String[] args) {
 
     vm::Vm vm = vm::init(args[1]);
     runtime::exec(&vm);
-    
+
     io::printn("EXECUTION COMPLETED.");
 }

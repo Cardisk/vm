@@ -3,9 +3,14 @@ module vm;
 import utils;
 import std::io;
 import std::core::string;
-import std::collection::map;
+import std::collections::map;
 
 const String MAGIC = "vm";
+
+fault VmError {
+    EOF,
+    FEW_BYTES,
+}
 
 struct Var {
     ulong stack_index;
@@ -14,11 +19,11 @@ struct Var {
 
 struct Vm {
     // Instruction pointer
-    usz ip;
+    ulong ip;
     // Base stack pointer
-    usz bp;
+    ulong bp;
     // Stack pointer
-    usz sp;
+    ulong sp;
 
     // Hashmap containing vars info
     map::HashMap(<String, Var>) vars;
@@ -36,7 +41,7 @@ struct Vm {
     String code;
 }
 
-fn void eat_magic(Vm *vm) @private {
+fn void magic(Vm *vm) @private {
     if (vm.bytecode.len < 2) {
         utils::crash("Magic code: Too few bytes provided.",
                      string::new_format("Expected %d, got %d.", 
@@ -59,7 +64,7 @@ fn Vm init(String data) {
     Vm vm;
     vm.bytecode = txt!!;
 
-    eat_magic(&vm);
+    magic(&vm);
     if (vm.bytecode.len < 8) {
         utils::crash("Data pool: Too few bytes provided.",
                      string::new_format("Expected 8, got %d.", 
@@ -72,7 +77,6 @@ fn Vm init(String data) {
         data_size |= ((ulong)(vm.bytecode[i])) << (8 * j++);
     }
 
-
     vm.data = vm.bytecode[(MAGIC.len + ulong.sizeof) : data_size];
     vm.code = vm.bytecode[((MAGIC.len + ulong.sizeof) + data_size)..];
 
@@ -83,13 +87,31 @@ fn Vm init(String data) {
     return vm;
 }
 
-fn ulong read_long(Vm *vm) {
+fn ulong! read_long(Vm *vm) {
+    if (vm.ip > vm.code.len - 8) return VmError.FEW_BYTES?;
+
     ulong value = 0;
     int j = 0;
     
     usz i = vm.ip;
     while (i < vm.ip + ulong.sizeof) {
         value |= ((ulong)(vm.code[i])) << (8 * j++);
+        i++;
+    }
+    vm.ip = i;
+
+    return value;
+}
+
+fn int! read_int(Vm *vm) {
+    if (vm.ip > vm.code.len - 4) return VmError.FEW_BYTES?;
+
+    int value = 0;
+    int j = 0;
+    
+    usz i = vm.ip;
+    while (i < vm.ip + int.sizeof) {
+        value |= ((int)(vm.code[i])) << (8 * j++);
         i++;
     }
     vm.ip = i;
