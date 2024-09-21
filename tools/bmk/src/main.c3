@@ -1,0 +1,192 @@
+module bmk;
+
+import std::io;
+import std::core::mem;
+import std::core::string;
+
+const RED     = "\x1b[31m";
+const GREEN   = "\x1b[32m";
+const YELLOW  = "\x1b[33m";
+const RESET   = "\x1b[0m";
+
+struct Buffer {
+    char[] data;
+    usz len;
+    usz capacity;
+}
+
+fn void! Buffer.init(&buf, usz capacity = 10) {
+    char[]! data = mem::new_array(char, capacity);
+    if (catch e = data) return e?;
+
+    buf.data = data;
+    buf.len = 0;
+    buf.capacity = capacity;
+}
+
+fn void Buffer.write(&buf, char c) {
+    if (buf.len >= buf.capacity) {
+        buf.capacity *= 2;
+        char *ptr = (char *) mem::realloc(buf.data, buf.capacity);
+    }
+
+    buf.data[buf.len++] = c;
+}
+
+fn void fatal(anyfault msg) {
+    io::eprintfn("[ %sFATAL%s ]: %s", RED, RESET, msg);
+}
+
+fn void warning(String msg) {
+    io::eprintfn("[ %sWARNING%s ]: %s", YELLOW, RESET, msg);
+}
+
+fn bool is_num(char c) {
+    switch (c) {
+        case '0':
+        case '1':
+        case '2':
+        case '3':
+        case '4':
+        case '5':
+        case '6':
+        case '7':
+        case '8':
+        case '9':
+            return true;
+        default:
+            return false;
+    }
+}
+
+fn void append_byte(Buffer *buf) {
+    io::print("byte > ");
+    String! num = io::readline();
+    if (catch e = num) {
+        fatal(e);
+        return;
+    }
+
+    int base = 10;
+    if (num.starts_with("b")) {
+        num = num[1..];
+        base = 2;
+    }
+
+    char! c = num.to_uchar(base);
+    if (catch e = c) {
+        fatal(e);
+        return;
+    }
+    
+    buf.write(c);
+}
+
+fn void append_char(Buffer *buf) {
+    io::print("char > ");
+    String! num = io::readline();
+    if (catch e = num) {
+        fatal(e);
+        return;
+    }
+
+    buf.write(num[0]);
+}
+
+fn void append_long(Buffer *buf) {
+    io::print("long > ");
+    String! num = io::readline();
+    if (catch e = num) {
+        fatal(e);
+        return;
+    }
+
+    int base = 10;
+    if (num.starts_with("b")) {
+        num = num[1..];
+        base = 2;
+    }
+
+    long! l = num.to_long(base);
+    if (catch e = l) {
+        fatal(e);
+        return;
+    }
+    
+    for (int i = 0; i < long.sizeof; i++) {
+        buf.write((char)(l >> 8 * i));
+    }
+}
+
+fn void append_int(Buffer *buf) {
+    io::print("int > ");
+    String! num = io::readline();
+    if (catch e = num) {
+        fatal(e);
+        return;
+    }
+
+    int base = 10;
+    if (num.starts_with("b")) {
+        num = num[1..];
+        base = 2;
+    }
+
+    int! val = num.to_int(base);
+    if (catch e = val) {
+        fatal(e);
+        return;
+    }
+    
+    for (int i = 0; i < int.sizeof; i++) {
+        buf.write((char)(val >> 8 * i));
+    }
+}
+
+fn void main()
+{
+    Buffer buf;
+    if (catch e = buf.init()) {
+        fatal(e);
+        return;
+    }
+
+    while (true) {
+        io::print("> ");
+        String! in = io::readline();
+        if (catch e = in) {
+            fatal(e);
+            return;
+        }
+
+        in.convert_ascii_to_lower();
+        
+        if (in == "exit") break;
+        switch (in) {
+            case "wb":
+                append_byte(&buf);
+            case "wc":
+                append_char(&buf);
+            case "wl":
+                append_long(&buf);
+            case "wi":
+                append_int(&buf);
+            default:
+                warning(string::new_format("invalid command '%s'", in));
+                continue;
+        }
+    }
+
+    io::printn("----------");
+    io::printn("Buffer:");
+    io::printfn("> len: %d", buf.len);
+    io::printfn("> capacity: %d", buf.capacity);
+    io::printn("> data:");
+
+    io::print(GREEN);
+    foreach(c : buf.data) {
+        io::printf("%c", c);
+    }
+    io::printn(RESET);
+    io::printn("----------");
+}
