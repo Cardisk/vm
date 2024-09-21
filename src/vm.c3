@@ -3,8 +3,14 @@ module vm;
 import utils;
 import std::io;
 import std::core::string;
+import std::collection::map;
 
 const String MAGIC = "vm";
+
+struct Var {
+    ulong stack_index;
+    ulong byte_size;
+}
 
 struct Vm {
     // Instruction pointer
@@ -14,19 +20,8 @@ struct Vm {
     // Stack pointer
     usz sp;
 
-    // General purpose
-    usz r1;
-    usz r2;
-    usz r3;
-    usz r4;
-    usz r5;
-    usz r6;
-    usz r7;
-    usz r8;
-    usz r9;
-    usz r10;
-    usz r11;
-    usz r12;
+    // Hashmap containing vars info
+    map::HashMap(<String, Var>) vars;
 
     // 32KB
     char[1024 * 32] stack;

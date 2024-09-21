@@ -10,7 +10,6 @@ Bytecode format:
 Instruction format:
 
 [1B opcode         ]
-[1B mode           ]
 [?B operand[s]     ]
 
 --------------------
@@ -20,26 +19,14 @@ Registers:
 - BP         // Base stack pointer
 - SP         // Stack pointer
 - IP         // Instruction pointer
-- EF         // EFlags
-- R1         // General purpose
-- R2         // General purpose
-- R3         // General purpose
-- R4         // General purpose
-- R5         // General purpose
-- R6         // General purpose
-- R7         // General purpose
-- R8         // General purpose
-- R9         // General purpose
-- R10        // General purpose
-- R11        // General purpose
-- R12        // General purpose
 
 --------------------
 
 Machine:
 
-- stack (fixed size)
-- heap  (dyn buffer)
+- stack (fixed size  )
+- heap  (vm allocator)
 - data  (fixed size)
 - bytecode
 - registers
+- vars
