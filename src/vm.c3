@@ -55,7 +55,7 @@ fn void magic(Vm *vm) @private {
     }
 }
 
-fn Vm init(String data) {
+fn Vm init(String data, bool debug = true) {
     String! txt = utils::read_file(data);
     if (catch err = txt) {
         utils::crash(string::new_format("Unable to read the file: %s", err));
@@ -80,11 +80,36 @@ fn Vm init(String data) {
     vm.data = vm.bytecode[(MAGIC.len + ulong.sizeof) : data_size];
     vm.code = vm.bytecode[((MAGIC.len + ulong.sizeof) + data_size)..];
 
-    utils::log(string::new_format("Bytecode  size: %d", vm.bytecode.len));
-    utils::log(string::new_format("Data pool size: %d", vm.data.len));
-    utils::log(string::new_format("Code pool size: %d", vm.code.len));
+    if (debug) {
+        utils::log("--- VM tearup");
+        utils::log(string::new_format("Bytecode  size: %d", vm.bytecode.len));
+        utils::log(string::new_format("Data pool size: %d", vm.data.len));
+        utils::log(string::new_format("Code pool size: %d", vm.code.len));
+    }
 
     return vm;
+}
+
+fn void destroy(Vm *vm, bool debug = true) {
+    if (debug) {
+        utils::log("--- VM teardown");
+        utils::log(string::new_format("Variables registered: %d", 
+                    vm.vars.count));
+        utils::log("Variables: ");
+        foreach (e : vm.vars.table) {
+            if (e != null) {
+                utils::log(
+                    string::new_format("\t%s = { .stack_index = %d, .byte_size = %d }",
+                                       e.key, e.value.stack_index, e.value.byte_size
+                ));
+            }
+        }
+    }
+
+    vm.bytecode.free();
+    // no need to free code and data,
+    // both are pointing inside the bytecode.
+    vm.vars.free();
 }
 
 fn ulong! read_long(Vm *vm) {

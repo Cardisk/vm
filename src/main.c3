@@ -18,7 +18,7 @@ fn void main(String[] args) {
     if (args.len < 2) usage(args[0]);
 
     vm::Vm vm = vm::init(args[1]);
-    runtime::exec(&vm);
+    defer vm::destroy(&vm);
 
-    io::printn("EXECUTION COMPLETED.");
+    runtime::exec(&vm);
 }

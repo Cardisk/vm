@@ -33,6 +33,10 @@ fn void exit(Vm *vm) {
 
     // libc::exit accepts an integer
     int code = (int) vm.code[vm.ip];
+    
+    // normally called from the main.
+    vm::destroy(vm);
+    
     libc::exit(code);
 }
 
