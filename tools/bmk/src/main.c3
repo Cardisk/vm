@@ -1,5 +1,6 @@
 module bmk;
 
+import libc;
 import std::io;
 import std::io::file;
 import std::core::mem;
@@ -146,12 +147,6 @@ fn void main(String[] args) {
         return;
     }
 
-    File! out = file::open(args[1], "wb");
-    if (catch e = out) {
-        fatal(e);
-        return;
-    }
-
     Buffer buf;
     if (catch e = buf.init()) {
         fatal(e);
@@ -168,7 +163,13 @@ fn void main(String[] args) {
 
         in.convert_ascii_to_lower();
         
-        if (in == "exit") break;
+        if (in == "exit") {
+            io::printn("Quitting...");
+            return;
+        }
+
+        if (in == "done") break;
+
         switch (in) {
             case "wb":
                 append_byte(&buf);
@@ -191,10 +192,13 @@ fn void main(String[] args) {
     io::printn();
     io::printfn("Writing to '%s'...", args[1]);
 
-    if (catch e = out.write(buf.data)) {
+    File! out = file::open(args[1], "wb");
+    if (catch e = out) {
         fatal(e);
         return;
     }
+
+    libc::fwrite(buf.data, char.sizeof, buf.len, out.file);
 
     io::printn("Done.");
     io::printn("----------");
