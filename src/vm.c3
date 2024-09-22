@@ -6,10 +6,13 @@ import std::core::string;
 import std::collections::map;
 
 const String MAGIC = "vm";
+// 32KB
+const usz STACK_SIZE = 1024 * 32;
 
 fault VmError {
     EOF,
     FEW_BYTES,
+    OUT_OF_BOUND,
 }
 
 struct Var {
@@ -29,7 +32,7 @@ struct Vm {
     map::HashMap(<String, Var>) vars;
 
     // 32KB
-    char[1024 * 32] stack;
+    char[STACK_SIZE] stack;
     // heap is forwarded to the vm one,
     // so no custom allocators are needed.
 
@@ -93,6 +96,9 @@ fn Vm init(String data, bool debug = true) {
 fn void destroy(Vm *vm, bool debug = true) {
     if (debug) {
         utils::log("--- VM teardown");
+        utils::log(string::new_format("Instruction pointer: %d", vm.ip));
+        utils::log(string::new_format("Base stack pointer: %d", vm.bp));
+        utils::log(string::new_format("Stack pointer: %d", vm.sp));
         utils::log(string::new_format("Variables registered: %d", 
                     vm.vars.count));
         utils::log("Variables: ");
@@ -112,7 +118,7 @@ fn void destroy(Vm *vm, bool debug = true) {
     vm.vars.free();
 }
 
-fn ulong! read_long(Vm *vm) {
+fn ulong! read_code_long(Vm *vm) {
     if (vm.ip > vm.code.len - 8) return VmError.FEW_BYTES?;
 
     ulong value = 0;
@@ -128,7 +134,7 @@ fn ulong! read_long(Vm *vm) {
     return value;
 }
 
-fn int! read_int(Vm *vm) {
+fn int! read_code_int(Vm *vm) {
     if (vm.ip > vm.code.len - 4) return VmError.FEW_BYTES?;
 
     int value = 0;
@@ -142,4 +148,30 @@ fn int! read_int(Vm *vm) {
     vm.ip = i;
 
     return value;
+}
+
+fn int! read_stack_int(Vm *vm, ulong index) {
+    if (index > STACK_SIZE - int.sizeof) return VmError.OUT_OF_BOUND?;
+
+    int value = 0;
+    int j = 0;
+
+    usz i = index;
+    while (i < index + int.sizeof) {
+        value |= ((int)(vm.stack[i])) << (8 * j++);
+        i++;
+    }
+
+    return value;
+}
+
+fn void! write_stack_int(Vm *vm, ulong index, int value) {
+    if (vm.sp > STACK_SIZE - int.sizeof) return VmError.OUT_OF_BOUND?;
+
+    for (int i = 0; i < int.sizeof; i++) {
+        vm.stack[index++] = (char)(value >> 8 * i);
+    }
+
+    // TODO: find a better way to handle this case
+    if (index - int.sizeof == vm.sp) vm.sp = index;
 }
