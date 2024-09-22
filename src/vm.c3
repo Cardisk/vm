@@ -99,6 +99,15 @@ fn void destroy(Vm *vm, bool debug = true) {
         utils::log(string::new_format("Instruction pointer: %d", vm.ip));
         utils::log(string::new_format("Base stack pointer: %d", vm.bp));
         utils::log(string::new_format("Stack pointer: %d", vm.sp));
+
+        utils::log("Stack:");
+        String stack = "\t";
+        for (usz i = 0; i < vm.sp; i++) {
+            stack = stack.concat(string::new_format("%b ", vm.stack[i]));
+        }
+        utils::log(stack);
+        utils::log("");
+
         utils::log(string::new_format("Variables registered: %d", 
                     vm.vars.count));
         utils::log("Variables: ");
