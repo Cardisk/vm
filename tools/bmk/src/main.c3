@@ -6,8 +6,15 @@ import std::io::file;
 import std::core::mem;
 import std::core::string;
 
+// TODO: collapse this two structs into a single one
 struct Buffer {
     char[] data;
+    usz len;
+    usz capacity;
+}
+
+struct Strings {
+    String[] data;
     usz len;
     usz capacity;
 }
@@ -29,6 +36,25 @@ fn void Buffer.write(&buf, char c) {
     }
 
     buf.data[buf.len++] = c;
+}
+
+fn void! Strings.init(&strs, usz capacity = 10) {
+    String[]! data = mem::new_array(String, capacity);
+    if (catch e = data) return e?;
+
+    strs.data = data;
+    strs.len = 0;
+    strs.capacity = capacity;
+}
+
+fn void Strings.write(&strs, String str) {
+    if (strs.len >= strs.capacity - 1) {
+        strs.capacity *= 2;
+        String *ptr = (String *) mem::realloc(strs.data, strs.capacity);
+        strs.data = ptr[: strs.capacity];
+    }
+
+    strs.data[strs.len++] = str;
 }
 
 fn void fatal(anyfault msg) {
@@ -141,6 +167,67 @@ fn void append_int(Buffer *buf) {
     }
 }
 
+fn void append_str(Buffer *buf) {
+    io::print("str > ");
+    String! str = io::readline();
+    if (catch e = str) {
+        fatal(e);
+        return;
+    }
+
+    foreach(c : str) {
+        buf.write(c);
+    }
+}
+
+fn void append_data(Buffer *buf) {
+    Strings strs;
+    if (catch e = strs.init()) {
+        fatal(e);
+        return;
+    }
+
+    io::print("strs num > ");
+    String! in = io::readline();
+    if (catch e = in) {
+        fatal(e);
+        return;
+    }
+
+    int! val = in.to_int();
+    if (catch e = val) {
+        fatal(e);
+        return;
+    }
+
+    for (int i = 0; i < val; i++) {
+        io::print(string::new_format("str %d > ", i + 1));
+        String! str = io::readline();
+        if (catch e = str) {
+            fatal(e);
+            return;
+        }
+            
+        strs.write(str);
+    }
+
+    ulong size;
+    for (int i = 0; i < strs.len; i++) {
+        size += strs.data[i].len;
+    }
+
+
+    for (int i = 0; i < long.sizeof; i++) {
+        buf.write((char)(size >> 8 * i));
+    }
+
+    for (int i = 0; i < strs.len; i++) {
+        foreach (c : strs.data[i]) {
+            buf.write(c);
+        }
+    }
+}
+
 fn void main(String[] args) {
     if (args.len < 2) {
         io::eprintn("[ USAGE ]: bmk <output>");
@@ -179,6 +266,10 @@ fn void main(String[] args) {
                 append_long(&buf);
             case "wi":
                 append_int(&buf);
+            case "ws":
+                append_str(&buf);
+            case "wdp":
+                append_data(&buf);
             default:
                 warning(string::new_format("invalid command '%s'", in));
                 continue;
