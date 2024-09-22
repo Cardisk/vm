@@ -5,11 +5,6 @@ import std::io::file;
 import std::core::mem;
 import std::core::string;
 
-const RED     = "\x1b[31m";
-const GREEN   = "\x1b[32m";
-const YELLOW  = "\x1b[33m";
-const RESET   = "\x1b[0m";
-
 struct Buffer {
     char[] data;
     usz len;
@@ -36,11 +31,11 @@ fn void Buffer.write(&buf, char c) {
 }
 
 fn void fatal(anyfault msg) {
-    io::eprintfn("[ %sFATAL%s ]: %s", RED, RESET, msg);
+    io::eprintfn("[ FATAL ]: %s", msg);
 }
 
 fn void warning(String msg) {
-    io::eprintfn("[ %sWARNING%s ]: %s", YELLOW, RESET, msg);
+    io::eprintfn("[ WARNING ]: %s", msg);
 }
 
 fn bool is_num(char c) {
@@ -147,7 +142,7 @@ fn void append_int(Buffer *buf) {
 
 fn void main(String[] args) {
     if (args.len < 2) {
-        io::eprintfn("[ %sUSAGE%s ]: bmk <output>", RED, RESET);
+        io::eprintn("[ USAGE ]: bmk <output>");
         return;
     }
 
