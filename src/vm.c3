@@ -184,3 +184,29 @@ fn void! write_stack_int(Vm *vm, ulong index, int value) {
     // TODO: find a better way to handle this case
     if (index - int.sizeof == vm.sp) vm.sp = index;
 }
+
+fn ulong! read_stack_long(Vm *vm, ulong index) {
+    if (index > STACK_SIZE - int.sizeof) return VmError.OUT_OF_BOUND?;
+
+    ulong value = 0;
+    int j = 0;
+
+    usz i = index;
+    while (i < index + ulong.sizeof) {
+        value |= ((ulong)(vm.stack[i])) << (8 * j++);
+        i++;
+    }
+
+    return value;
+}
+
+fn void! write_stack_long(Vm *vm, ulong index, long value) {
+    if (vm.sp > STACK_SIZE - int.sizeof) return VmError.OUT_OF_BOUND?;
+
+    for (int i = 0; i < long.sizeof; i++) {
+        vm.stack[index++] = (char)(value >> 8 * i);
+    }
+
+    // TODO: find a better way to handle this case
+    if (index - long.sizeof == vm.sp) vm.sp = index;
+}
