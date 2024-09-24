@@ -82,6 +82,49 @@ fn void print(Vm *vm) {
             }
 
             io::print((long) value);
+        // variable
+        case 0x3:
+            ulong! name_index = vm::read_code_long(vm);
+            if (catch name_index) {
+                utils::crash("Print instruction: Missing/uncomplete var name index.");
+                return;
+            }
+
+            ulong! name_size = vm::read_code_long(vm);
+            if (catch name_size) {
+                utils::crash("Print instruction: Missing/uncomplete var name size.");
+                return;
+            }
+
+            String var_name = vm.data[name_index : name_size];
+            
+            Var! var_info = vm.vars[var_name];
+            if (catch var_info) {
+                utils::crash("Add instruction: Undecleared var provided.");
+                return;
+            }
+
+            switch (var_info.byte_size) {
+                case int.sizeof:
+                    int! value = vm::read_stack_int(vm, var_info.stack_index);
+                    if (catch value) {
+                        utils::crash("Print instruction: Stack out of bound.");
+                        return;
+                    }
+
+                    io::print(value);
+                case long.sizeof:
+                    ulong! value = vm::read_stack_long(vm, var_info.stack_index);
+                    if (catch value) {
+                        utils::crash("Print instruction: Stack out of bound.");
+                        return;
+                    }
+
+                    io::print((long) value);
+                default:
+                    utils::crash("Print instruction: Unknown type provided.");
+            }
+            
         default:
             utils::crash("Print instruction: Unknown print mode.");
     }
