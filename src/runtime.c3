@@ -73,6 +73,15 @@ fn void print(Vm *vm) {
             }
 
             io::print(value);
+        // long immediate
+        case 0x2:
+            ulong! value = vm::read_code_long(vm);
+            if (catch value) {
+                utils::crash("Print instruction: Missing/uncomplete long operand.");
+                return;
+            }
+
+            io::print((long) value);
         default:
             utils::crash("Print instruction: Unknown print mode.");
     }
