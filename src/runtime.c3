@@ -40,21 +40,42 @@ fn void exit(Vm *vm) {
     libc::exit(code);
 }
 
-// <opcode> <8B index> <8B size>
+// <opcode> <1B mode> <?B operand[s]>
 fn void print(Vm *vm) {
-    ulong! index = vm::read_code_long(vm);
-    if (catch index) {
-        utils::crash("Print instruction: Missing/uncomplete data pool index.");
-        return;
+    if (vm.ip >= vm.code.len) {
+        utils::crash("Print instruction: Missing print mode.");
     }
 
-    ulong! size = vm::read_code_long(vm);
-    if (catch size) {
-        utils::crash("Print instruction: Missing/uncomplete string size.");
-        return;
-    }
+    char mode = vm.code[vm.ip++];
+    
+    switch (mode) {
+        // data pool string
+        case 0x0:
+            ulong! index = vm::read_code_long(vm);
+            if (catch index) {
+                utils::crash("Print instruction: Missing/uncomplete data pool index.");
+                return;
+            }
 
-    io::print(vm.data[index : size]);
+            ulong! size = vm::read_code_long(vm);
+            if (catch size) {
+                utils::crash("Print instruction: Missing/uncomplete string size.");
+                return;
+            }
+
+            io::print(vm.data[index : size]);
+        // int immediate
+        case 0x1:
+            int! value = vm::read_code_int(vm);
+            if (catch value) {
+                utils::crash("Print instruction: Missing/uncomplete int operand.");
+                return;
+            }
+
+            io::print(value);
+        default:
+            utils::crash("Print instruction: Unknown print mode.");
+    }
 }
 
 // <opcode> <8B index> <8B size> <1B type> <?B operand>
