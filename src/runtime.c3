@@ -171,6 +171,23 @@ fn void vardecl(Vm *vm) {
 
             vm::Var v = {stack_index, int.sizeof};
             vm.vars.set(var_name, v);
+        // long
+        case 0x1:
+            ulong! value = vm::read_code_long(vm);
+            if (catch value) {
+                utils::crash("Var declaration: Missing/uncomplete var value");
+                return;
+            }
+
+            ulong stack_index = vm.sp;
+            if (catch vm::write_stack_long(vm, vm.sp, value)) {
+                utils::crash("Var declaration: Unable to append to the stack.",
+                             "Stack pointer has gone out of bounds.");
+                return;
+            }
+
+            vm::Var v = {stack_index, long.sizeof};
+            vm.vars.set(var_name, v);
         default:
             utils::crash("Var declaration: Unknown type provided.");
             break;
@@ -245,7 +262,29 @@ fn void add(Vm *vm) {
                         default:
                             utils::crash(string::new_format("Add instruction: Invalid storing mode '%d'", mode));
                     } 
+                case long.sizeof:
+                    ulong! lhs = vm::read_stack_long(vm, var_info.stack_index);
+                    if (catch lhs) {
+                        utils::crash("Add instruction: Stack out of bound.");
+                        return;
+                    }
+    
+                    ulong! rhs = vm::read_code_long(vm);
+                    if (catch rhs) {
+                        utils::crash("Add instruction: Missing/uncomplete operand.");
+                        return;
+                    }
 
+                    switch ((OpStoreMode) mode) {
+                        case OpStoreMode.INC:
+                            if (catch vm::write_stack_long(vm, var_info.stack_index, (long)(lhs + rhs))) {
+                                utils::crash("Add instruction: Stack out of bound.");
+                                return;
+                            }
+                        default:
+                            utils::crash(string::new_format("Add instruction: Invalid storing mode '%d'", mode));
+                    } 
+                    
                 default:
                     utils::crash(string::new_format("Add instruction: '%s' is unsupported.", 
                                                     var_name));
