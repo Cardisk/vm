@@ -127,6 +127,12 @@ fn void destroy(Vm *vm, bool debug = true) {
     vm.vars.free();
 }
 
+fn char! read_code_byte(Vm *vm) {
+    if (vm.ip > vm.code.len - 1) return VmError.FEW_BYTES?;
+
+    return vm.code[vm.ip++];
+}
+
 fn ulong! read_code_long(Vm *vm) {
     if (vm.ip > vm.code.len - 8) return VmError.FEW_BYTES?;
 
