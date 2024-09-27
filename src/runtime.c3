@@ -12,7 +12,7 @@ enum Code : uint {
     EXIT,
     PRINT,
     VARDECL,
-    ADD,
+    MATH,
     // MOV,
     // CMP,
     // JMP,
@@ -204,8 +204,14 @@ enum OpStoreMode {
     INC,
 }
 
-// <opcode> <1B mode> <1B storing mode> <?B operand[s]>
-fn void add(Vm *vm) {
+// <opcode> <1B operation> <1B mode> <1B storing mode> <?B operand[s]>
+fn void math(Vm *vm) {
+    if (vm.ip >= vm.code.len) {
+        utils::crash("Add instruction: Missing operation specifier.");
+        return;
+    }
+    char operation = vm.code[vm.ip++];
+
     if (vm.ip >= vm.code.len) {
         utils::crash("Add instruction: Missing operation mode.");
         return;
@@ -253,9 +259,28 @@ fn void add(Vm *vm) {
                         return;
                     }
 
+                    int result;
+
+                    switch (operation) {
+                        // sum
+                        case 0x0:
+                            result = lhs + rhs;
+                        // sub
+                        case 0x1:
+                            result = lhs - rhs;
+                        // mul
+                        case 0x2:
+                            result = lhs * rhs;
+                        // div
+                        case 0x3:
+                            result = lhs / rhs;
+                        default:
+                            utils::crash("Math instruction: Unknown operation provided.");
+                    }
+
                     switch ((OpStoreMode) mode) {
                         case OpStoreMode.INC:
-                            if (catch vm::write_stack_int(vm, var_info.stack_index, lhs + rhs)) {
+                            if (catch vm::write_stack_int(vm, var_info.stack_index, result)) {
                                 utils::crash("Add instruction: Stack out of bound.");
                                 return;
                             }
@@ -274,10 +299,29 @@ fn void add(Vm *vm) {
                         utils::crash("Add instruction: Missing/uncomplete operand.");
                         return;
                     }
+                    
+                    long result;
+
+                    switch (operation) {
+                        // sum
+                        case 0x0:
+                            result = lhs + rhs;
+                        // sub
+                        case 0x1:
+                            result = lhs - rhs;
+                        // mul
+                        case 0x2:
+                            result = lhs * rhs;
+                        // div
+                        case 0x3:
+                            result = lhs / rhs;
+                        default:
+                            utils::crash("Math instruction: Unknown operation provided.");
+                    }
 
                     switch ((OpStoreMode) mode) {
                         case OpStoreMode.INC:
-                            if (catch vm::write_stack_long(vm, var_info.stack_index, (long)(lhs + rhs))) {
+                            if (catch vm::write_stack_long(vm, var_info.stack_index, result)) {
                                 utils::crash("Add instruction: Stack out of bound.");
                                 return;
                             }
@@ -309,8 +353,8 @@ fn void exec(Vm *vm) {
                 print(vm);
             case Code.VARDECL:
                 vardecl(vm);
-            case Code.ADD:
-                add(vm);
+            case Code.MATH:
+                math(vm);
             default:
                 utils::crash(string::new_format("Unknown opcode: %s", (Code) opcode));
         }
