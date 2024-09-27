@@ -40,6 +40,13 @@ fn void exit(Vm *vm) {
     libc::exit(code);
 }
 
+enum PrintMode : uint {
+    DATASTR,
+    CODEINT,
+    CODELNG,
+    VAR,
+}
+
 // <opcode> <1B mode> <?B operand[s]>
 fn void print(Vm *vm) {
     if (vm.ip >= vm.code.len) {
@@ -48,9 +55,9 @@ fn void print(Vm *vm) {
 
     char mode = vm.code[vm.ip++];
     
-    switch (mode) {
+    switch ((PrintMode) mode) {
         // data pool string
-        case 0x0:
+        case PrintMode.DATASTR:
             ulong! index = vm::read_code_long(vm);
             if (catch index) {
                 utils::crash("Print instruction: Missing/uncomplete data pool index.");
@@ -65,7 +72,7 @@ fn void print(Vm *vm) {
 
             io::print(vm.data[index : size]);
         // int immediate
-        case 0x1:
+        case PrintMode.CODEINT:
             int! value = vm::read_code_int(vm);
             if (catch value) {
                 utils::crash("Print instruction: Missing/uncomplete int operand.");
@@ -74,7 +81,7 @@ fn void print(Vm *vm) {
 
             io::print(value);
         // long immediate
-        case 0x2:
+        case PrintMode.CODELNG:
             ulong! value = vm::read_code_long(vm);
             if (catch value) {
                 utils::crash("Print instruction: Missing/uncomplete long operand.");
@@ -83,7 +90,7 @@ fn void print(Vm *vm) {
 
             io::print((long) value);
         // variable
-        case 0x3:
+        case PrintMode.VAR:
             ulong! name_index = vm::read_code_long(vm);
             if (catch name_index) {
                 utils::crash("Print instruction: Missing/uncomplete var name index.");
@@ -100,7 +107,7 @@ fn void print(Vm *vm) {
             
             Var! var_info = vm.vars[var_name];
             if (catch var_info) {
-                utils::crash("Add instruction: Undecleared var provided.");
+                utils::crash("Math instruction: Undecleared var provided.");
                 return;
             }
 
@@ -130,6 +137,11 @@ fn void print(Vm *vm) {
     }
 }
 
+enum VarType : uint {
+    INT,
+    LONG,
+}
+
 // <opcode> <8B index> <8B size> <1B type> <?B operand>
 fn void vardecl(Vm *vm) {
     ulong! name_index = vm::read_code_long(vm);
@@ -153,9 +165,9 @@ fn void vardecl(Vm *vm) {
 
     // only 1B needed
     char type = vm.code[vm.ip++];
-    switch (type) {
+    switch ((VarType) type) {
         // integer
-        case 0x0:
+        case VarType.INT:
             int! value = vm::read_code_int(vm);
             if (catch value) {
                 utils::crash("Var declaration: Missing/uncomplete var value");
@@ -172,7 +184,7 @@ fn void vardecl(Vm *vm) {
             vm::Var v = {stack_index, int.sizeof};
             vm.vars.set(var_name, v);
         // long
-        case 0x1:
+        case VarType.LONG:
             ulong! value = vm::read_code_long(vm);
             if (catch value) {
                 utils::crash("Var declaration: Missing/uncomplete var value");
@@ -194,54 +206,61 @@ fn void vardecl(Vm *vm) {
     }
 }
 
+enum MathOperation : uint {
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+}
+
 // describes how to read the next byte[s]
-enum OpMode {
+enum MathMode : uint {
     VAR_IMM,
 }
 
 // describes where to store the result of the operation
-enum OpStoreMode {
+enum MathStore : uint {
     INC,
 }
 
 // <opcode> <1B operation> <1B mode> <1B storing mode> <?B operand[s]>
 fn void math(Vm *vm) {
     if (vm.ip >= vm.code.len) {
-        utils::crash("Add instruction: Missing operation specifier.");
+        utils::crash("Math instruction: Missing operation specifier.");
         return;
     }
     char operation = vm.code[vm.ip++];
 
     if (vm.ip >= vm.code.len) {
-        utils::crash("Add instruction: Missing operation mode.");
+        utils::crash("Math instruction: Missing operation mode.");
         return;
     }
     char mode = vm.code[vm.ip++];
 
     if (vm.ip >= vm.code.len) {
-        utils::crash("Add instruction: Missing operation mode.");
+        utils::crash("Math instruction: Missing operation mode.");
         return;
     }
     char store = vm.code[vm.ip++]; 
 
-    switch ((OpMode) mode) {
-        case OpMode.VAR_IMM:
+    switch ((MathMode) mode) {
+        case MathMode.VAR_IMM:
             ulong! name_index = vm::read_code_long(vm);
             if (catch name_index) {
-                utils::crash("Add instruction: Missing/uncomplete var name index.");
+                utils::crash("Math instruction: Missing/uncomplete var name index.");
                 return;
             }
 
             ulong! name_size = vm::read_code_long(vm);
             if (catch name_size) {
-                utils::crash("Add instruction: Missing/uncomplete var name size.");
+                utils::crash("Math instruction: Missing/uncomplete var name size.");
                 return;
             }
 
             String var_name = vm.data[name_index : name_size];
             Var! var_info = vm.vars[var_name];
             if (catch var_info) {
-                utils::crash("Add instruction: Undecleared var provided.");
+                utils::crash("Math instruction: Undecleared var provided.");
                 return;
             }
             
@@ -249,94 +268,86 @@ fn void math(Vm *vm) {
                 case int.sizeof:
                     int! lhs = vm::read_stack_int(vm, var_info.stack_index);
                     if (catch lhs) {
-                        utils::crash("Add instruction: Stack out of bound.");
+                        utils::crash("Math instruction: Stack out of bound.");
                         return;
                     }
     
                     int! rhs = vm::read_code_int(vm);
                     if (catch rhs) {
-                        utils::crash("Add instruction: Missing/uncomplete operand.");
+                        utils::crash("Math instruction: Missing/uncomplete operand.");
                         return;
                     }
 
                     int result;
 
-                    switch (operation) {
-                        // sum
-                        case 0x0:
+                    switch ((MathOperation) operation) {
+                        case MathOperation.ADD:
                             result = lhs + rhs;
-                        // sub
-                        case 0x1:
+                        case MathOperation.SUB:
                             result = lhs - rhs;
-                        // mul
-                        case 0x2:
+                        case MathOperation.MUL:
                             result = lhs * rhs;
-                        // div
-                        case 0x3:
+                        case MathOperation.DIV:
                             result = lhs / rhs;
                         default:
                             utils::crash("Math instruction: Unknown operation provided.");
                     }
 
-                    switch ((OpStoreMode) mode) {
-                        case OpStoreMode.INC:
+                    switch ((MathStore) mode) {
+                        case MathStore.INC:
                             if (catch vm::write_stack_int(vm, var_info.stack_index, result)) {
-                                utils::crash("Add instruction: Stack out of bound.");
+                                utils::crash("Math instruction: Stack out of bound.");
                                 return;
                             }
                         default:
-                            utils::crash(string::new_format("Add instruction: Invalid storing mode '%d'", mode));
+                            utils::crash(string::new_format("Math instruction: Invalid storing mode '%d'", mode));
                     } 
                 case long.sizeof:
                     ulong! lhs = vm::read_stack_long(vm, var_info.stack_index);
                     if (catch lhs) {
-                        utils::crash("Add instruction: Stack out of bound.");
+                        utils::crash("Math instruction: Stack out of bound.");
                         return;
                     }
     
                     ulong! rhs = vm::read_code_long(vm);
                     if (catch rhs) {
-                        utils::crash("Add instruction: Missing/uncomplete operand.");
+                        utils::crash("Math instruction: Missing/uncomplete operand.");
                         return;
                     }
                     
                     long result;
 
-                    switch (operation) {
-                        // sum
-                        case 0x0:
+                    switch ((MathOperation) operation) {
+                        case MathOperation.ADD:
                             result = lhs + rhs;
-                        // sub
-                        case 0x1:
+                        case MathOperation.SUB:
                             result = lhs - rhs;
-                        // mul
-                        case 0x2:
+                        case MathOperation.MUL:
                             result = lhs * rhs;
-                        // div
-                        case 0x3:
+                        case MathOperation.DIV:
                             result = lhs / rhs;
                         default:
                             utils::crash("Math instruction: Unknown operation provided.");
                     }
 
-                    switch ((OpStoreMode) mode) {
-                        case OpStoreMode.INC:
+                    switch ((MathStore) mode) {
+                        case MathStore.INC:
                             if (catch vm::write_stack_long(vm, var_info.stack_index, result)) {
-                                utils::crash("Add instruction: Stack out of bound.");
+                                utils::crash("Math instruction: Stack out of bound.");
                                 return;
                             }
                         default:
-                            utils::crash(string::new_format("Add instruction: Invalid storing mode '%d'", mode));
+                            utils::crash(string::new_format("Math instruction: Invalid storing mode '%d'", mode));
                     } 
                     
                 default:
-                    utils::crash(string::new_format("Add instruction: '%s' is unsupported.", 
+                    utils::crash(string::new_format("Math instruction: '%s' is unsupported.", 
                                                     var_name));
             }
 
         default:
-            utils::crash(string::new_format("Add instruction: Unknown mode '%s'", 
-                                            (OpMode) mode));
+            utils::crash(string::new_format("Math instruction: Unknown mode '%s'", 
+                                            (MathMode) mode));
     }
     
 }
