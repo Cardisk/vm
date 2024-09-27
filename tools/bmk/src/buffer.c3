@@ -5,6 +5,7 @@ import std::core::mem;
 struct Buffer {
     Type[] data;
     usz len;
+    usz ckpt;
     usz capacity;
 }
 
@@ -25,4 +26,12 @@ fn void Buffer.write(&buf, Type value) {
     }
 
     buf.data[buf.len++] = value;
+}
+
+fn void Buffer.transaction(&buf) {
+    buf.ckpt = buf.len;
+}
+
+fn void Buffer.rollback(&buf) {
+    buf.len = buf.ckpt;
 }

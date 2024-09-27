@@ -1,8 +1,10 @@
 module utils;
 
+import buffer;
+
 import std::io;
 
-fn void fatal(anyfault msg) {
+fn void fatal(anyfault msg) @noreturn {
     io::eprintfn("[ FATAL ]: %s", msg);
 }
 
@@ -14,11 +16,11 @@ fn String input(String msg = "") {
     io::printf("%s> ", msg);
     
     String! in = io::readline();
-    if (catch e = num) {
+    if (catch e = in) {
         utils::fatal(e);
     }
 
-    return in!!;
+    return in;
 }
 
 fn bool is_num(char c) {
@@ -36,5 +38,17 @@ fn bool is_num(char c) {
             return true;
         default:
             return false;
+    }
+}
+
+fn void wlong(Buffer(<char>) *buf, long value) {
+    for (int i = 0; i < long.sizeof; i++) {
+        buf.write((char)(value >> 8 * i));
+    }
+}
+
+fn void wint(Buffer(<char>) *buf, int value) {
+    for (int i = 0; i < int.sizeof; i++) {
+        buf.write((char)(value >> 8 * i));
     }
 }

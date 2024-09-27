@@ -15,7 +15,6 @@ fn void append_byte(Buffer(<char>) *buf) {
     String! num = io::readline();
     if (catch e = num) {
         utils::fatal(e);
-        return;
     }
 
     int base = 10;
@@ -27,7 +26,6 @@ fn void append_byte(Buffer(<char>) *buf) {
     char! c = num.to_uchar(base);
     if (catch e = c) {
         utils::fatal(e);
-        return;
     }
     
     buf.write(c);
@@ -38,7 +36,6 @@ fn void append_char(Buffer(<char>) *buf) {
     String! num = io::readline();
     if (catch e = num) {
         utils::fatal(e);
-        return;
     }
 
     buf.write(num[0]);
@@ -49,7 +46,6 @@ fn void append_long(Buffer(<char>) *buf) {
     String! num = io::readline();
     if (catch e = num) {
         utils::fatal(e);
-        return;
     }
 
     int base = 10;
@@ -61,7 +57,6 @@ fn void append_long(Buffer(<char>) *buf) {
     long! l = num.to_long(base);
     if (catch e = l) {
         utils::fatal(e);
-        return;
     }
     
     for (int i = 0; i < long.sizeof; i++) {
@@ -74,7 +69,6 @@ fn void append_int(Buffer(<char>) *buf) {
     String! num = io::readline();
     if (catch e = num) {
         utils::fatal(e);
-        return;
     }
 
     int base = 10;
@@ -86,7 +80,6 @@ fn void append_int(Buffer(<char>) *buf) {
     int! val = num.to_int(base);
     if (catch e = val) {
         utils::fatal(e);
-        return;
     }
     
     for (int i = 0; i < int.sizeof; i++) {
@@ -99,7 +92,6 @@ fn void append_str(Buffer(<char>) *buf) {
     String! str = io::readline();
     if (catch e = str) {
         utils::fatal(e);
-        return;
     }
 
     foreach(c : str) {
@@ -111,20 +103,17 @@ fn void append_data(Buffer(<char>) *buf) {
     Buffer(<String>) strs;
     if (catch e = strs.init()) {
         utils::fatal(e);
-        return;
     }
 
     io::print("strs num > ");
     String! in = io::readline();
     if (catch e = in) {
         utils::fatal(e);
-        return;
     }
 
     int! val = in.to_int();
     if (catch e = val) {
         utils::fatal(e);
-        return;
     }
 
     for (int i = 0; i < val; i++) {
@@ -132,7 +121,6 @@ fn void append_data(Buffer(<char>) *buf) {
         String! str = io::readline();
         if (catch e = str) {
             utils::fatal(e);
-            return;
         }
             
         strs.write(str);
@@ -164,7 +152,6 @@ fn void main(String[] args) {
     Buffer(<char>) buf;
     if (catch e = buf.init()) {
         utils::fatal(e);
-        return;
     }
 
     while (true) {
@@ -172,7 +159,6 @@ fn void main(String[] args) {
         String! in = io::readline();
         if (catch e = in) {
             utils::fatal(e);
-            return;
         }
 
         in.convert_ascii_to_lower();
@@ -213,7 +199,6 @@ fn void main(String[] args) {
     File! out = file::open(args[1], "wb");
     if (catch e = out) {
         utils::fatal(e);
-        return;
     }
 
     libc::fwrite(buf.data, char.sizeof, buf.len, out.file);
