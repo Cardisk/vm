@@ -1,93 +1,20 @@
 module bmk;
 
+import format;
+import buffer;
+import utils;
+
 import libc;
 import std::io;
 import std::io::file;
 import std::core::mem;
 import std::core::string;
 
-// TODO: collapse this two structs into a single one
-struct Buffer {
-    char[] data;
-    usz len;
-    usz capacity;
-}
-
-struct Strings {
-    String[] data;
-    usz len;
-    usz capacity;
-}
-
-fn void! Buffer.init(&buf, usz capacity = 10) {
-    char[]! data = mem::new_array(char, capacity);
-    if (catch e = data) return e?;
-
-    buf.data = data;
-    buf.len = 0;
-    buf.capacity = capacity;
-}
-
-fn void Buffer.write(&buf, char c) {
-    if (buf.len >= buf.capacity - 1) {
-        buf.capacity *= 2;
-        char *ptr = (char *) mem::realloc(buf.data, buf.capacity);
-        buf.data = ptr[: buf.capacity];
-    }
-
-    buf.data[buf.len++] = c;
-}
-
-fn void! Strings.init(&strs, usz capacity = 10) {
-    String[]! data = mem::new_array(String, capacity);
-    if (catch e = data) return e?;
-
-    strs.data = data;
-    strs.len = 0;
-    strs.capacity = capacity;
-}
-
-fn void Strings.write(&strs, String str) {
-    if (strs.len >= strs.capacity - 1) {
-        strs.capacity *= 2;
-        String *ptr = (String *) mem::realloc(strs.data, strs.capacity);
-        strs.data = ptr[: strs.capacity];
-    }
-
-    strs.data[strs.len++] = str;
-}
-
-fn void fatal(anyfault msg) {
-    io::eprintfn("[ FATAL ]: %s", msg);
-}
-
-fn void warning(String msg) {
-    io::eprintfn("[ WARNING ]: %s", msg);
-}
-
-fn bool is_num(char c) {
-    switch (c) {
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-        case '8':
-        case '9':
-            return true;
-        default:
-            return false;
-    }
-}
-
-fn void append_byte(Buffer *buf) {
+fn void append_byte(Buffer(<char>) *buf) {
     io::print("byte > ");
     String! num = io::readline();
     if (catch e = num) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -99,29 +26,29 @@ fn void append_byte(Buffer *buf) {
 
     char! c = num.to_uchar(base);
     if (catch e = c) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
     
     buf.write(c);
 }
 
-fn void append_char(Buffer *buf) {
+fn void append_char(Buffer(<char>) *buf) {
     io::print("char > ");
     String! num = io::readline();
     if (catch e = num) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
     buf.write(num[0]);
 }
 
-fn void append_long(Buffer *buf) {
+fn void append_long(Buffer(<char>) *buf) {
     io::print("long > ");
     String! num = io::readline();
     if (catch e = num) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -133,7 +60,7 @@ fn void append_long(Buffer *buf) {
 
     long! l = num.to_long(base);
     if (catch e = l) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
     
@@ -142,11 +69,11 @@ fn void append_long(Buffer *buf) {
     }
 }
 
-fn void append_int(Buffer *buf) {
+fn void append_int(Buffer(<char>) *buf) {
     io::print("int > ");
     String! num = io::readline();
     if (catch e = num) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -158,7 +85,7 @@ fn void append_int(Buffer *buf) {
 
     int! val = num.to_int(base);
     if (catch e = val) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
     
@@ -167,11 +94,11 @@ fn void append_int(Buffer *buf) {
     }
 }
 
-fn void append_str(Buffer *buf) {
+fn void append_str(Buffer(<char>) *buf) {
     io::print("str > ");
     String! str = io::readline();
     if (catch e = str) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -180,23 +107,23 @@ fn void append_str(Buffer *buf) {
     }
 }
 
-fn void append_data(Buffer *buf) {
-    Strings strs;
+fn void append_data(Buffer(<char>) *buf) {
+    Buffer(<String>) strs;
     if (catch e = strs.init()) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
     io::print("strs num > ");
     String! in = io::readline();
     if (catch e = in) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
     int! val = in.to_int();
     if (catch e = val) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -204,7 +131,7 @@ fn void append_data(Buffer *buf) {
         io::print(string::new_format("str %d > ", i + 1));
         String! str = io::readline();
         if (catch e = str) {
-            fatal(e);
+            utils::fatal(e);
             return;
         }
             
@@ -234,9 +161,9 @@ fn void main(String[] args) {
         return;
     }
 
-    Buffer buf;
+    Buffer(<char>) buf;
     if (catch e = buf.init()) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
@@ -244,7 +171,7 @@ fn void main(String[] args) {
         io::print("> ");
         String! in = io::readline();
         if (catch e = in) {
-            fatal(e);
+            utils::fatal(e);
             return;
         }
 
@@ -271,7 +198,7 @@ fn void main(String[] args) {
             case "wdp":
                 append_data(&buf);
             default:
-                warning(string::new_format("invalid command '%s'", in));
+                utils::warning(string::new_format("invalid command '%s'", in));
                 continue;
         }
     }
@@ -285,7 +212,7 @@ fn void main(String[] args) {
 
     File! out = file::open(args[1], "wb");
     if (catch e = out) {
-        fatal(e);
+        utils::fatal(e);
         return;
     }
 
