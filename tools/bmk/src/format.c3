@@ -416,11 +416,11 @@ fn void math(Buffer(<char>) *b) {
 
 def Op = fn void(Buffer(<char>) *b);
 
-enum Code : uint (String desc, Op func) {
-    EXIT     =  { "exit",    &exit    },
-    PRINT    =  { "print",   &print   },
-    VARDECL  =  { "vardecl", &vardecl },
-    MATH     =  { "math",    &math    },
+enum Code : uint (Op func) {
+    EXIT     =  &exit,
+    PRINT    =  &print,
+    VARDECL  =  &vardecl,
+    MATH     =  &math,
 }
 
 fn String Code.format(&self) {
