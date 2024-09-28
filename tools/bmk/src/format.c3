@@ -265,10 +265,153 @@ fn void vardecl(Buffer(<char>) *b) {
     }
 }
 
+enum MathOperation {
+    ADD,
+    SUB,
+    MUL,
+    DIV,
+}
+
+enum MathMode {
+    VAR_IMM,
+}
+
+enum MathStore {
+    INC,    
+}
+
 fn void math(Buffer(<char>) *b) {
     b.transaction();
     b.write((char) Code.MATH);
 
+    String in;
+    int base;
+
+    in = utils::input("operation (string)");
+
+    MathOperation! operation = enum_by_name(MathOperation, in);
+    if (catch operation) {
+        utils::warning("Inalid operation provided.");
+        b.rollback();
+        return;
+    }
+
+    b.write((char) operation);
+
+    in = utils::input("mode (string)");
+
+    MathMode! mode = enum_by_name(MathMode, in);
+    if (catch mode) {
+        utils::warning("Inalid mode provided.");
+        b.rollback();
+        return;
+    }
+
+    b.write((char) mode);
+
+    in = utils::input("storing (string)");
+
+    MathStore! store = enum_by_name(MathStore, in);
+    if (catch store) {
+        utils::warning("Inalid store provided.");
+        b.rollback();
+        return;
+    }
+
+    b.write((char) store);
+
+    switch (mode) {
+        case VAR_IMM:
+            in = utils::input("var name index (long)");
+
+            base = 10;
+            if (in.starts_with("b")) {
+                in = in[1..];
+                base = 2;
+            }
+            
+            long! index = in.to_long(base);
+            if (catch index) {
+                utils::warning("Unable to convert input into long.");
+                b.rollback();
+                return;
+            }
+
+            utils::wlong(b, index);
+            
+            in = utils::input("var name size  (long)");
+            
+            base = 10;
+            if (in.starts_with("b")) {
+                in = in[1..];
+                base = 2;
+            }
+            
+            long! size = in.to_long(base);
+            if (catch size) {
+                utils::warning("Unable to convert input into long.");
+                b.rollback();
+                return;
+            }
+
+            utils::wlong(b, size);
+            
+            in = utils::input("var type (string)");
+
+            VarType! type = enum_by_name(VarType, in);
+            if (catch type) {
+                utils::warning("Invalid type provided.");
+                b.rollback();
+                return;
+            }
+
+            switch (type) {
+                case INT:
+                    in = utils::input("value (int)");
+
+                    base = 10;
+                    if (in.starts_with("b")) {
+                        in = in[1..];
+                        base = 2;
+                    }
+                    
+                    int! value = in.to_int(base);
+                    if (catch value) {
+                        utils::warning("Unable to convert input into int.");
+                        b.rollback();
+                        return;
+                    }
+
+                    utils::wint(b, value);
+                case LONG:
+                    in = utils::input("value (long)");
+
+                    base = 10;
+                    if (in.starts_with("b")) {
+                        in = in[1..];
+                        base = 2;
+                    }
+                    
+                    long! value = in.to_long(base);
+                    if (catch value) {
+                        utils::warning("Unable to convert input into long.");
+                        b.rollback();
+                        return;
+                    }
+
+                    utils::wlong(b, value);
+
+                default:
+                    utils::warning("Invalid type provided.");
+                    b.rollback();
+                    return;
+            }
+
+        default:
+            utils::warning("Unknown operation mode provided.");
+            b.rollback();
+            return;
+    }
 }
 
 def Op = fn void(Buffer(<char>) *b);
