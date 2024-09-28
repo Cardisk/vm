@@ -2,10 +2,22 @@ module utils;
 
 import buffer;
 
+import libc;
 import std::io;
 
 fn void fatal(anyfault msg) @noreturn {
     io::eprintfn("[ FATAL ]: %s", msg);
+    libc::exit(1);
+}
+
+fn void panic(String msg) @noreturn {
+    io::eprintfn("[ FATAL ]: %s", msg);
+    libc::exit(1);
+}
+
+fn void usage() @noreturn {
+    io::eprintn("[ USAGE ]: bmk <output_file>");
+    libc::exit(1);
 }
 
 fn void warning(String msg) {
@@ -16,9 +28,7 @@ fn String input(String msg = "") {
     io::printf("%s> ", msg);
     
     String! in = io::readline();
-    if (catch e = in) {
-        utils::fatal(e);
-    }
+    if (catch e = in) utils::fatal(e);
 
     return in;
 }
