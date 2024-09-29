@@ -44,6 +44,7 @@ fn void print(Buffer(<char>) *b) {
 
     in = utils::input("mode (string)");
 
+    in.convert_ascii_to_upper();
     PrintMode! mode = enum_by_name(PrintMode, in);
     if (catch mode) {
         utils::warning("Inalid mode provided.");
@@ -212,7 +213,7 @@ fn void vardecl(Buffer(<char>) *b) {
 
     utils::wlong(b, size);
 
-
+    in.convert_ascii_to_upper();
     VarType! type = enum_by_name(VarType, in);
     if (catch type) {
         utils::warning("Inalid type provided.");
@@ -289,6 +290,7 @@ fn void math(Buffer(<char>) *b) {
 
     in = utils::input("operation (string)");
 
+    in.convert_ascii_to_upper();
     MathOperation! operation = enum_by_name(MathOperation, in);
     if (catch operation) {
         utils::warning("Inalid operation provided.");
@@ -300,6 +302,7 @@ fn void math(Buffer(<char>) *b) {
 
     in = utils::input("mode (string)");
 
+    in.convert_ascii_to_upper();
     MathMode! mode = enum_by_name(MathMode, in);
     if (catch mode) {
         utils::warning("Inalid mode provided.");
@@ -311,6 +314,7 @@ fn void math(Buffer(<char>) *b) {
 
     in = utils::input("storing (string)");
 
+    in.convert_ascii_to_upper();
     MathStore! store = enum_by_name(MathStore, in);
     if (catch store) {
         utils::warning("Inalid store provided.");
@@ -358,6 +362,7 @@ fn void math(Buffer(<char>) *b) {
             
             in = utils::input("var type (string)");
 
+            in.convert_ascii_to_upper();
             VarType! type = enum_by_name(VarType, in);
             if (catch type) {
                 utils::warning("Invalid type provided.");
@@ -416,12 +421,19 @@ fn void math(Buffer(<char>) *b) {
 
 def Op = fn void(Buffer(<char>) *b);
 
-enum Code : uint (Op func) {
-    EXIT     =  &exit,
-    PRINT    =  &print,
-    VARDECL  =  &vardecl,
-    MATH     =  &math,
+enum Code {
+    EXIT,
+    PRINT,
+    VARDECL,
+    MATH,
 }
+
+const Op[*] CODES = {
+    &exit,
+    &print,
+    &vardecl,
+    &math
+};
 
 fn String Code.format(&self) {
     switch (*self) {

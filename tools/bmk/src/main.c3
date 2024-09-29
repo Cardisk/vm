@@ -10,6 +10,8 @@ import std::io::file;
 import std::core::mem;
 import std::core::string;
 
+String output;
+
 fn void quit(Buffer(<char>) *b) {
     io::printn("Quitting...");
     libc::exit(0);
@@ -21,14 +23,30 @@ fn void done(Buffer(<char>) *b) {
     io::printfn("> len: %d", b.len);
     io::printfn("> capacity: %d", b.capacity);
     io::printn();
-    io::printfn("Writing to '%s'...", args[1]);
+    io::printfn("Writing to '%s'...", output);
 
-    File! out = file::open(args[1], "wb");
+    File! out = file::open(output, "wb");
     if (catch out) utils::panic("Unable to open the file provided.");
 
     libc::fwrite(b.data, char.sizeof, b.len, out.file);
 
     io::printn("Done.");
+    io::printn("----------");
+
+    libc::exit(0);
+}
+
+fn void help(Buffer(<char>) *b) {
+    io::printn("----------");
+    io::printn("--- VM Commands");
+    foreach (op : format::Code.names) {
+        io::printn(string::new_format("> %s", op));
+    }
+
+    io::printn("--- Raw Commands");
+    foreach (op : Cmd.names) {
+        io::printn(string::new_format("> %s", op));
+    }
     io::printn("----------");
 }
 
@@ -140,7 +158,7 @@ fn void wdp(Buffer(<char>) *b) {
     ulong size;
     for (int i = 0; i < val; i++) {
         in = utils::input(string::new_format("string %d", i + 1));
-        strs.write(str);
+        strs.write(in);
         size += in.len;
     }
 
@@ -153,31 +171,47 @@ fn void wdp(Buffer(<char>) *b) {
     }
 }
 
-enum Cmd : uint (Op func) {
-    QUIT = &quit,
-    DONE = &done,
-    WB   = &wb,
-    WC   = &wc,
-    WI   = &wi,
-    WL   = &wl,
-    WS   = &ws,
-    WDP  = &wdp ,
+enum Cmd {
+    QUIT,
+    DONE,
+    HELP,
+    WB,
+    WC,
+    WI,
+    WL,
+    WS,
+    WDP,
 }
+
+
+const Op[*] CMDS = {
+    &quit,
+    &done,
+    &help,
+    &wb,
+    &wc,
+    &wi,
+    &wl,
+    &ws,
+    &wdp,
+};
 
 fn void main(String[] args) {
     if (args.len != 2) utils::usage();
+
+    output = args[1];
 
     Buffer(<char>) b;
     if (catch b.init()) utils::panic("Unable to allocate buffer memory.");
 
     while (true) {
-        String in = utils::input("> ");
-        in.convert_ascii_to_lower();
+        String in = utils::input();
+        in.convert_ascii_to_upper();
 
         Cmd! cmd = enum_by_name(Cmd, in);
-        if (try cmd) cmd.func(&b);
+        if (try cmd) CMDS[cmd](&b);
 
         format::Code! code = enum_by_name(format::Code, in);
-        if (try code) code.func(&b);
+        if (try code) format::CODES[code](&b);
     }
 }
